@@ -3,7 +3,7 @@ import hmac
 import hashlib
 import requests
 
-
+# test
 def generate_merchant_signature(merchant_account, merchant_domain, order_reference, order_date, amount, currency, product_name, product_price, product_count):
     signature_string = f"{merchant_account};{merchant_domain};{order_reference};{order_date};{amount};{currency};"
     signature_string += f"{';'.join(product_name)};{';'.join(map(str, product_count))};{';'.join(map(str, product_price))}"
