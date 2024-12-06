@@ -23,9 +23,28 @@ def extract_user_id_from_reference(order_reference):
 
 def add_user_to_channel(user_id):
     dbuser = db.get_user(user_id)
-    requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/approveChatJoinRequest?chat_id={CHANNEL_ID}&user_id={user_id}")
-    requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={user_id}&text=Дякуємо за оплату! Ваша місячна підписка на канал LookBook активована.")
-    requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={ADMIN_ID}&text=Користувач @{dbuser[0]} - {dbuser[1]} доданий до каналу!")
+
+    invite_link_url = f"https://api.telegram.org/bot{BOT_TOKEN}/createChatInviteLink"
+    invite_link_params = {
+        "chat_id": CHANNEL_ID,
+        "expire_date": None, # Может стоит написать 30 дней?
+        "member_limit": 1,
+    }
+
+    response = requests.post(invite_link_url, data=invite_link_params)
+
+    if response.status_code == 200:
+        invite_link = response.json().get('invite_link')
+
+        if invite_link:
+            message = f"Дякуємо за оплату! Ваша місячна підписка на канал LookBook активована.\n\nНатискайте на посилання для приєднання: {invite_link}"
+            requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={user_id}&text={message}")
+
+            requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={ADMIN_ID}&text=Користувач @{dbuser[0]} - {dbuser[1]} доданий до каналу!")
+        else:
+            print("Error while receiving invitation link")
+    else:
+        print(f"Error creating invitation link: {response.json()}")
 
 
 def delete_user_from_channel(user_id):
